@@ -48,6 +48,9 @@ jobs:
     - name: Setup Minikube
       uses: medyagh/setup-minikube@master
 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
     - name: Deploy to Kubernetes
       working-directory: infra
       run: |
