@@ -6,10 +6,6 @@ on:
     types: [completed]
     branches: [main]
 
-env:
-  REGISTRY: onoureldin14
-  IMAGE_NAME: simple-typescript-app
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,10 +17,7 @@ jobs:
     - name: Setup Minikube
       uses: medyagh/setup-minikube@master
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-
-    - name: Deploy with Terraform
+    - name: Deploy
       working-directory: infra
       run: |
         terraform init
