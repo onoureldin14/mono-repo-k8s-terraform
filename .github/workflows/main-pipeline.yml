@@ -21,11 +21,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Verify directory structure
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "App directory contents:"
+        ls -la app/
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
+        cache-dependency-path: app/package-lock.json
+
+    - name: Check package-lock.json
+      working-directory: app
+      run: |
+        if [ ! -f package-lock.json ]; then
+          echo "package-lock.json not found, creating it..."
+          npm install
+        fi
 
     - name: Install dependencies
       working-directory: app
