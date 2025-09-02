@@ -4,13 +4,62 @@ on:
   push:
     branches: [ main ]
 
+env:
+  REGISTRY: onoureldin14
+  IMAGE_NAME: simple-typescript-app
+
 jobs:
-  orchestrate:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Pipeline Started
-        run: |
-          echo "🚀 Main pipeline started"
-          echo "📦 App workflow will build and push Docker image"
-          echo "☸️  Infra workflow will deploy to Minikube"
-          echo "⏳ Check individual workflow status in Actions tab"
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      working-directory: app
+      run: npm ci
+
+    - name: Build application
+      working-directory: app
+      run: npm run build
+
+    - name: Setup Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./app
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+    - name: Setup Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Deploy to Kubernetes
+      working-directory: infra
+      run: |
+        terraform init
+        terraform apply -auto-approve -var="app_version=latest"
+
+    - name: Wait for deployment
+      run: |
+        kubectl wait --for=condition=ready pod -l app=simple-typescript-app --timeout=60s
+
+    - name: Show status
+      run: |
+        kubectl get pods
+        kubectl get services
+        echo "🌐 Access at: http://$(minikube ip):30000"
