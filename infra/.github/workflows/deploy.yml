@@ -1,0 +1,41 @@
+name: Deploy to Minikube
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types: [completed]
+    branches: [main]
+
+env:
+  REGISTRY: onoureldin14
+  IMAGE_NAME: simple-typescript-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Deploy with Terraform
+      working-directory: infra
+      run: |
+        terraform init
+        terraform apply -auto-approve -var="app_version=latest"
+
+    - name: Wait for deployment
+      run: |
+        kubectl wait --for=condition=ready pod -l app=simple-typescript-app --timeout=60s
+
+    - name: Show status
+      run: |
+        kubectl get pods
+        kubectl get services
+        echo "🌐 Access at: http://$(minikube ip):30000"

@@ -1,0 +1,25 @@
+# Example configuration file
+# Copy this to terraform.tfvars and modify as needed
+
+# Application configuration
+app_name    = "simple-typescript-app"
+app_version = "latest"
+replicas    = 2
+
+# Port configuration
+container_port = 3000
+node_port      = 30000
+
+# Environment
+environment = "production"
+
+# Resource configuration
+resource_limits = {
+  cpu    = "100m"
+  memory = "128Mi"
+}
+
+resource_requests = {
+  cpu    = "50m"
+  memory = "64Mi"
+}
