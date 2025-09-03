@@ -1,0 +1,24 @@
+# Simple test policy to demonstrate the concept
+# This shows how the policy would work in Terraform Cloud/Enterprise
+
+import "strings"
+
+# Function to check if a container image uses the "latest" tag
+is_latest_tag = func(image) {
+    return strings.has_suffix(image, ":latest") or image == "latest"
+}
+
+# Test with sample data
+test_image_latest = "nginx:latest"
+test_image_versioned = "nginx:1.21.6"
+
+# Test the function
+latest_check = is_latest_tag(test_image_latest)
+versioned_check = is_latest_tag(test_image_versioned)
+
+# Main rule - this would be applied to tfplan in real usage
+main = rule {
+    # This demonstrates the logic - in real usage, this would check tfplan.resource_changes
+    # We want to ensure no "latest" tags are used
+    not latest_check
+}

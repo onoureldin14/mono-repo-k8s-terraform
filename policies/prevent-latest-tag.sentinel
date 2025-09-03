@@ -1,0 +1,30 @@
+# Prevent using "latest" tag for container deployments
+# This policy ensures that container images use specific version tags instead of "latest"
+
+import "tfplan"
+
+# Function to check if a container image uses the "latest" tag
+is_latest_tag = func(image) {
+    return strings.has_suffix(image, ":latest") or image == "latest"
+}
+
+# Main rule: Check Kubernetes deployments for latest tag usage
+main = rule {
+    all tfplan.resource_changes as _, rc {
+        # Check if this is a Kubernetes deployment resource
+        rc.type is "kubernetes_deployment" and
+        rc.change.actions is not ["delete"] and
+        # Check if the deployment has containers
+        "spec" in rc.change.after and
+        "template" in rc.change.after.spec and
+        "spec" in rc.change.after.spec.template and
+        "containers" in rc.change.after.spec.template.spec and
+        # Check each container in the deployment
+        all rc.change.after.spec.template.spec.containers as _, container {
+            # Check if container has an image field
+            "image" in container and
+            # Ensure the image doesn't use the "latest" tag
+            not is_latest_tag(container["image"])
+        }
+    }
+}

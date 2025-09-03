@@ -1,0 +1,32 @@
+# Demo policy showing both passing and failing scenarios
+# This demonstrates how the policy works
+
+import "strings"
+
+# Function to check if a container image uses the "latest" tag
+is_latest_tag = func(image) {
+    return strings.has_suffix(image, ":latest") or image == "latest"
+}
+
+# Test scenarios
+compliant_image = "nginx:1.21.6"
+non_compliant_image = "nginx:latest"
+
+# Test the function
+compliant_check = is_latest_tag(compliant_image)
+non_compliant_check = is_latest_tag(non_compliant_image)
+
+# Rule for compliant image (should pass)
+compliant_rule = rule {
+    not compliant_check
+}
+
+# Rule for non-compliant image (should fail)
+non_compliant_rule = rule {
+    not non_compliant_check
+}
+
+# Main rule - demonstrates the concept
+main = rule {
+    compliant_rule
+}
