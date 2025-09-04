@@ -5,7 +5,7 @@ variable "app_name" {
 }
 
 variable "app_version" {
-  description = "Version of the application image"
+  description = "Version tag for the container image"
   type        = string
   default     = "latest"
 }
@@ -21,7 +21,7 @@ variable "workload_type" {
 }
 
 variable "replicas" {
-  description = "Number of replicas for the deployment"
+  description = "Number of replicas for deployment (ignored for daemonset)"
   type        = number
   default     = 2
 }
@@ -32,24 +32,15 @@ variable "container_port" {
   default     = 3000
 }
 
-variable "node_port" {
-  description = "NodePort for the service"
-  type        = number
-  default     = 30000
-}
-
 variable "environment" {
-  description = "Environment name"
+  description = "Environment name (e.g., production, staging, development)"
   type        = string
   default     = "production"
 }
 
 variable "resource_limits" {
-  description = "Resource limits for containers"
-  type = object({
-    cpu    = string
-    memory = string
-  })
+  description = "Resource limits for the container"
+  type        = map(string)
   default = {
     cpu    = "100m"
     memory = "128Mi"
@@ -57,15 +48,18 @@ variable "resource_limits" {
 }
 
 variable "resource_requests" {
-  description = "Resource requests for containers"
-  type = object({
-    cpu    = string
-    memory = string
-  })
+  description = "Resource requests for the container"
+  type        = map(string)
   default = {
     cpu    = "50m"
     memory = "64Mi"
   }
+}
+
+variable "node_port" {
+  description = "Node port for the service"
+  type        = number
+  default     = 30000
 }
 
 variable "labels" {

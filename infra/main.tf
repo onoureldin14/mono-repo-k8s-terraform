@@ -13,98 +13,34 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-# Kubernetes Deployment
-resource "kubernetes_deployment" "simple_typescript_app" {
-  metadata {
-    name = var.app_name
-    labels = {
-      app = var.app_name
-    }
-  }
+# App Module - Creates either Deployment or DaemonSet based on workload_type variable
+module "app" {
+  source = "./modules/app"
 
-  spec {
-    replicas = var.replicas
-
-    selector {
-      match_labels = {
-        app = var.app_name
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = var.app_name
-        }
-      }
-
-      spec {
-        container {
-          name  = var.app_name
-          image = "onoureldin14/${var.app_name}:${var.app_version}"
-          
-          port {
-            container_port = var.container_port
-          }
-
-          env {
-            name  = "NODE_ENV"
-            value = var.environment
-          }
-
-          env {
-            name  = "PORT"
-            value = tostring(var.container_port)
-          }
-
-          resources {
-            limits = var.resource_limits
-            requests = var.resource_requests
-          }
-
-          liveness_probe {
-            http_get {
-              path = "/health"
-              port = var.container_port
-            }
-            initial_delay_seconds = 30
-            period_seconds        = 10
-          }
-
-          readiness_probe {
-            http_get {
-              path = "/health"
-              port = var.container_port
-            }
-            initial_delay_seconds = 5
-            period_seconds        = 5
-          }
-        }
-      }
-    }
-  }
-}
-
-# Kubernetes Service
-resource "kubernetes_service" "simple_typescript_app" {
-  metadata {
-    name = "${var.app_name}-service"
-    labels = {
-      app = var.app_name
-    }
-  }
-
-  spec {
-    type = "NodePort"
-    
-    selector = {
-      app = var.app_name
-    }
-
-    port {
-      port        = var.container_port
-      target_port = var.container_port
-      node_port   = var.node_port
-    }
-  }
+  # Basic configuration
+  app_name    = var.app_name
+  app_version = var.app_version
+  
+  # Workload type: "deployment" or "daemonset"
+  workload_type = var.workload_type
+  
+  # Deployment specific (ignored for daemonset)
+  replicas = var.replicas
+  
+  # Container configuration
+  container_port = var.container_port
+  environment    = var.environment
+  
+  # Resource configuration
+  resource_limits   = var.resource_limits
+  resource_requests = var.resource_requests
+  
+  # Service configuration
+  node_port = var.node_port
+  
+  # Additional labels
+  labels = var.labels
+  
+  # Namespace
+  namespace = var.namespace
 }
